@@ -18,16 +18,20 @@
     @media (min-width: 768px) {
       body { flex-direction: row; }
     }
+    /* On mobile the player comes first and the menu fills the space below it. */
     .sidebar {
+      order: 1;
+      flex: 1;
       background: #181818;
-      border-bottom: 1px solid #2a2a2a;
+      border-top: 1px solid #2a2a2a;
       padding: 1rem;
     }
     @media (min-width: 768px) {
       .sidebar {
+        order: 0;
+        flex: none;
         width: 240px;
-        flex-shrink: 0;
-        border-bottom: none;
+        border-top: none;
         border-right: 1px solid #2a2a2a;
         padding: 1.5rem 1rem;
       }
@@ -66,7 +70,6 @@
       white-space: nowrap;
     }
     main {
-      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -75,6 +78,9 @@
     }
     @media (min-width: 600px) {
       main { padding: 2rem; }
+    }
+    @media (min-width: 768px) {
+      main { flex: 1; }
     }
     h1 {
       font-size: 1.5rem;
