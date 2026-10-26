@@ -59,6 +59,7 @@
     }
     .menu a:hover { background: #242424; color: #fff; }
     .menu a.active { background: #2d2d2d; color: #fff; font-weight: 600; }
+    .menu + h2 { margin-top: 1.5rem; }
     .badge {
       font-size: 0.7rem;
       color: #888;
@@ -110,10 +111,7 @@
   </style>
 </head>
 <body>
-  <nav class="sidebar">
-    <h2>Videos</h2>
-    <ul class="menu" id="menu"></ul>
-  </nav>
+  <nav class="sidebar" id="sidebar"></nav>
   <main>
     <h1 id="title"></h1>
     <div class="player">
@@ -126,18 +124,28 @@
   </main>
   <script>
     // Add new videos here. Leave src empty to show "coming soon".
+    // Videos with the same section are grouped under one heading in the menu.
     const videos = [
-      { id: 'fight-arena', title: 'Fight Arena', src: 'videos/fight_arena_web.mp4' },
-      { id: 'shotguns-dual-wield', title: 'Shotguns and Dual Wield', src: '' },
-      { id: 'castle-defender', title: 'Castle Defender', src: '' },
+      { id: 'fight-arena', section: 'Videos', title: 'Fight Arena', src: 'videos/fight_arena_web.mp4' },
+      { id: 'shotguns-dual-wield', section: 'Videos', title: 'Shotguns and Dual Wield', src: '' },
+      { id: 'castle-defender', section: 'Videos', title: 'Castle Defender', src: '' },
+      { id: 'temple-swingshot', section: 'Temple', title: 'Swingshot Test', src: 'videos/temple_swingshot_web.mp4' },
     ];
 
-    const menu = document.getElementById('menu');
+    const sidebar = document.getElementById('sidebar');
     const title = document.getElementById('title');
     const video = document.getElementById('video');
     const comingSoon = document.getElementById('coming-soon');
 
+    const menus = {};
     videos.forEach(v => {
+      if (!menus[v.section]) {
+        const heading = document.createElement('h2');
+        heading.textContent = v.section;
+        menus[v.section] = document.createElement('ul');
+        menus[v.section].className = 'menu';
+        sidebar.append(heading, menus[v.section]);
+      }
       const li = document.createElement('li');
       const a = document.createElement('a');
       a.href = '#' + v.id;
@@ -150,14 +158,14 @@
         a.appendChild(badge);
       }
       li.appendChild(a);
-      menu.appendChild(li);
+      menus[v.section].appendChild(li);
     });
 
     function show() {
       const current = videos.find(v => '#' + v.id === location.hash) || videos[0];
       title.textContent = current.title;
       document.title = current.title + ' | Video Host';
-      menu.querySelectorAll('a').forEach(a => {
+      sidebar.querySelectorAll('a').forEach(a => {
         a.classList.toggle('active', a.dataset.id === current.id);
       });
       video.pause();
