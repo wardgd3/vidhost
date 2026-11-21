@@ -108,6 +108,67 @@
       color: #888;
       font-size: 1.1rem;
     }
+    .carousel {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      margin-top: 1.5rem;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+    .carousel-track {
+      display: flex;
+      transition: transform 0.35s ease;
+    }
+    .carousel-track a {
+      flex: 0 0 100%;
+      aspect-ratio: 16 / 10;
+      display: block;
+    }
+    .carousel-track img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2.5rem;
+      height: 2.5rem;
+      border: none;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 1.4rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .carousel-btn:hover { background: rgba(0, 0, 0, 0.85); }
+    .carousel-btn.prev { left: 0.75rem; }
+    .carousel-btn.next { right: 0.75rem; }
+    .carousel-dots {
+      position: absolute;
+      bottom: 0.75rem;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .carousel-dots button {
+      width: 0.6rem;
+      height: 0.6rem;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.35);
+      cursor: pointer;
+    }
+    .carousel-dots button.active { background: #fff; }
     [hidden] { display: none !important; }
     footer {
       margin-top: 1.5rem;
@@ -126,11 +187,18 @@
       </video>
       <div class="coming-soon" id="coming-soon" hidden>Video coming soon</div>
     </div>
+    <div class="carousel" id="carousel" hidden>
+      <div class="carousel-track" id="carousel-track"></div>
+      <button class="carousel-btn prev" id="carousel-prev" aria-label="Previous image">&#8249;</button>
+      <button class="carousel-btn next" id="carousel-next" aria-label="Next image">&#8250;</button>
+      <div class="carousel-dots" id="carousel-dots"></div>
+    </div>
     <footer>Self-hosted video</footer>
   </main>
   <script>
     // Add new videos here. Leave src empty to show "coming soon".
     // Videos with the same section are grouped under one heading in the menu.
+    // Optional images are shown in a carousel under the video.
     const videos = [
       { id: 'fight-arena', section: 'Videos', title: 'Fight Arena', src: 'videos/fight_arena_web.mp4' },
       { id: 'shotguns-dual-wield', section: 'Videos', title: 'Shotguns and Dual Wield', src: '' },
@@ -138,13 +206,23 @@
       { id: 'temple-swingshot', section: 'Temple', title: 'Swingshot Test', src: 'videos/temple_swingshot_web.mp4' },
       { id: 'conquest-showcase', section: 'Conquest', title: 'Conquest Showcase', src: 'videos/conquest_showcase1_web.mp4' },
       { id: 'conquest-medieval-showcase', section: 'Conquest', title: 'Medieval Showcase', src: 'videos/conquest_medieval_showcase1_web.mp4' },
-      { id: 'titan-showcase', section: 'Titan', title: 'Titan Showcase', src: 'videos/titan_showcase1_web.mp4' },
+      { id: 'titan-showcase', section: 'Titan', title: 'Titan Showcase', src: 'videos/titan_showcase1_web.mp4',
+        images: [
+          'images/titans/Screenshot 2026-11-21 142318.png',
+          'images/titans/Screenshot 2026-11-21 142347.png',
+          'images/titans/Screenshot 2026-11-21 142419.png',
+          'images/titans/Screenshot 2026-11-21 142437.png',
+        ] },
     ];
 
     const sidebar = document.getElementById('sidebar');
     const title = document.getElementById('title');
     const video = document.getElementById('video');
     const comingSoon = document.getElementById('coming-soon');
+    const carousel = document.getElementById('carousel');
+    const track = document.getElementById('carousel-track');
+    const dots = document.getElementById('carousel-dots');
+    let slide = 0;
 
     const menus = {};
     videos.forEach(v => {
@@ -170,6 +248,39 @@
       menus[v.section].appendChild(li);
     });
 
+    function goTo(i) {
+      const count = track.children.length;
+      slide = (i + count) % count;
+      track.style.transform = 'translateX(' + (-100 * slide) + '%)';
+      [...dots.children].forEach((d, j) => d.classList.toggle('active', j === slide));
+    }
+
+    function showImages(images) {
+      track.replaceChildren();
+      dots.replaceChildren();
+      carousel.hidden = !images.length;
+      images.forEach((path, i) => {
+        const src = encodeURI(path);
+        const a = document.createElement('a');
+        a.href = src;
+        a.target = '_blank';
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = 'Screenshot ' + (i + 1);
+        img.loading = 'lazy';
+        a.appendChild(img);
+        track.appendChild(a);
+        const dot = document.createElement('button');
+        dot.setAttribute('aria-label', 'Show image ' + (i + 1));
+        dot.addEventListener('click', () => goTo(i));
+        dots.appendChild(dot);
+      });
+      if (images.length) goTo(0);
+    }
+
+    document.getElementById('carousel-prev').addEventListener('click', () => goTo(slide - 1));
+    document.getElementById('carousel-next').addEventListener('click', () => goTo(slide + 1));
+
     function show() {
       const current = videos.find(v => '#' + v.id === location.hash) || videos[0];
       title.textContent = current.title;
@@ -188,6 +299,7 @@
         video.hidden = true;
         comingSoon.hidden = false;
       }
+      showImages(current.images || []);
     }
 
     window.addEventListener('hashchange', show);
